@@ -3,7 +3,7 @@
   var __indexOf = [].indexOf || function(item) { for (var i = 0, l = this.length; i < l; i++) { if (i in this && this[i] === item) return i; } return -1; };
 
   $(function() {
-    var WIN_PATTERNS, checkForWin, clearBoard, counter, getCellNumber, isEmpty, markCell, resetGame;
+    var WIN_PATTERNS, checkForTie, checkForWin, clearBoard, counter, getBoard, getCellNumber, isEmpty, markCell, resetGame;
     counter = 0;
     WIN_PATTERNS = [[0, 1, 2], [3, 4, 5], [6, 7, 8], [0, 3, 6], [1, 4, 7], [2, 5, 8], [0, 4, 8], [2, 4, 6]];
     isEmpty = function(cell) {
@@ -23,12 +23,15 @@
       $('#gameboard').hide();
       return $('#start-game').fadeIn(500);
     };
+    getBoard = function() {
+      return ($('.board-cell').map(function(idx, el) {
+        return $(el).text();
+      })).get();
+    };
     checkForWin = function(cell) {
       var board, p, patternsToTest, win, _i, _len, _ref, _ref1;
       win = '';
-      board = ($('.board-cell').map(function(idx, el) {
-        return $(el).text();
-      })).get();
+      board = getBoard();
       patternsToTest = WIN_PATTERNS.filter(function(pattern) {
         return __indexOf.call(pattern, cell) >= 0;
       });
@@ -43,13 +46,31 @@
         return resetGame();
       }
     };
+    checkForTie = function(counter) {
+      var board, p, pattern, remainPatterns, voidedCounter, _i, _len;
+      remainPatterns = WIN_PATTERNS;
+      voidedCounter = 0;
+      for (_i = 0, _len = remainPatterns.length; _i < _len; _i++) {
+        p = remainPatterns[_i];
+        board = getBoard();
+        pattern = [board[p[0]], board[p[1]], board[p[2]]];
+        if ((__indexOf.call(pattern, 'o') >= 0) && (__indexOf.call(pattern, 'x') >= 0)) {
+          voidedCounter++;
+        }
+      }
+      if (counter > 8 || voidedCounter === 8) {
+        alert('Tie game');
+        return resetGame();
+      }
+    };
     markCell = function(cell, mark) {
       cell.text(mark);
       cell.addClass(mark);
       counter += 1;
       if (counter > 4) {
-        return checkForWin(getCellNumber(cell));
+        checkForWin(getCellNumber(cell));
       }
+      return checkForTie(counter);
     };
     $('#start-game').on('click', function(e) {
       clearBoard();
