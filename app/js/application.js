@@ -4,6 +4,15 @@
 
   ticTacToe = angular.module('TicTacToe', []);
 
+  ticTacToe.controller('BoardController', function($scope) {
+    $scope.cells = {};
+    return $scope.mark = function(cell) {
+      var mark;
+      mark = Object.keys($scope.cells).length % 2 === 0 ? 'x' : 'o';
+      return $scope.cells[cell] = mark;
+    };
+  });
+
 }).call(this);
 
 //# sourceMappingURL=application.map
