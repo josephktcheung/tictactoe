@@ -26,12 +26,20 @@ class BoardCtrl
     c2 = c[pattern[2]] || pattern[2]
     "#{c0}#{c1}#{c2}"
 
+  resetBoard: =>
+    @$scope.cells = {}
+
+  player: =>
+    if @numberOfMoves() % 2 == 0 then 'x' else 'o'
+
+  numberOfMoves: =>
+    Object.keys(@$scope.cells).length
+
   checkForWin: (board) ->
     'xxx' == board || 'ooo' == board
 
   announceWinner: =>
-    console.log @$scope.cells
-    winner = if Object.keys(@$scope.cells).length % 2 == 0 then 'o' else 'x'
+    winner = if @numberOfMoves() % 2 == 0 then 'o' else 'x'
     alert "#{winner} wins!"
 
   parseBoard: =>
@@ -41,8 +49,7 @@ class BoardCtrl
 
   mark: (@$event) =>
     cell = @$event.target.dataset.index
-    player = if Object.keys(@$scope.cells).length % 2 == 0 then 'x' else 'o'
-    @$scope.cells[cell] = player
+    @$scope.cells[cell] = @player()
     @parseBoard()
       
 BoardCtrl.$inject = ["$scope", "Settings"]
