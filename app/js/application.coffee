@@ -18,8 +18,12 @@ class BoardCtrl
   constructor: (@$scope, @Settings) ->
     @$scope.cells = {}
     @$scope.mark = @mark
+    @$scope.patternsToTest = @getPatterns()
 
-  getBoard: (pattern) =>
+  getPatterns: =>
+    @Settings.WIN_PATTERNS.filter -> true
+
+  getRow: (pattern) =>
     c = @$scope.cells
     c0 = c[pattern[0]] || pattern[0]
     c1 = c[pattern[1]] || pattern[1]
@@ -29,23 +33,26 @@ class BoardCtrl
   resetBoard: =>
     @$scope.cells = {}
 
-  player: =>
-    if @numberOfMoves() % 2 == 0 then 'x' else 'o'
+  player: (options) =>
+    options ||= whoMovedLast: false
+    moves = @numberOfMoves() - (if options.whoMovedLast then 1 else 0)
+    if moves % 2 == 0 then 'x' else 'o'
 
   numberOfMoves: =>
     Object.keys(@$scope.cells).length
 
-  checkForWin: (board) ->
-    'xxx' == board || 'ooo' == board
+  someoneWon: (row) ->
+    'xxx' == row || 'ooo' == row
 
   announceWinner: =>
-    winner = if @numberOfMoves() % 2 == 0 then 'o' else 'x'
+    winner = @player(whoMovedLast: true)
     alert "#{winner} wins!"
 
   parseBoard: =>
-    for pattern in @Settings.WIN_PATTERNS
-      board = @getBoard(pattern)
-      @announceWinner() if @checkForWin(board)
+    @$scope.patternsToTest = @$scope.patternsToTest.filter (pattern) =>
+      row = @getRow(pattern)
+      @announceWinner() if @someoneWon(row)
+      true
 
   mark: (@$event) =>
     cell = @$event.target.dataset.index

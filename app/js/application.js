@@ -20,12 +20,20 @@
       this.numberOfMoves = __bind(this.numberOfMoves, this);
       this.player = __bind(this.player, this);
       this.resetBoard = __bind(this.resetBoard, this);
-      this.getBoard = __bind(this.getBoard, this);
+      this.getRow = __bind(this.getRow, this);
+      this.getPatterns = __bind(this.getPatterns, this);
       this.$scope.cells = {};
       this.$scope.mark = this.mark;
+      this.$scope.patternsToTest = this.getPatterns();
     }
 
-    BoardCtrl.prototype.getBoard = function(pattern) {
+    BoardCtrl.prototype.getPatterns = function() {
+      return this.Settings.WIN_PATTERNS.filter(function() {
+        return true;
+      });
+    };
+
+    BoardCtrl.prototype.getRow = function(pattern) {
       var c, c0, c1, c2;
       c = this.$scope.cells;
       c0 = c[pattern[0]] || pattern[0];
@@ -38,8 +46,13 @@
       return this.$scope.cells = {};
     };
 
-    BoardCtrl.prototype.player = function() {
-      if (this.numberOfMoves() % 2 === 0) {
+    BoardCtrl.prototype.player = function(options) {
+      var moves;
+      options || (options = {
+        whoMovedLast: false
+      });
+      moves = this.numberOfMoves() - (options.whoMovedLast ? 1 : 0);
+      if (moves % 2 === 0) {
         return 'x';
       } else {
         return 'o';
@@ -50,30 +63,29 @@
       return Object.keys(this.$scope.cells).length;
     };
 
-    BoardCtrl.prototype.checkForWin = function(board) {
-      return 'xxx' === board || 'ooo' === board;
+    BoardCtrl.prototype.someoneWon = function(row) {
+      return 'xxx' === row || 'ooo' === row;
     };
 
     BoardCtrl.prototype.announceWinner = function() {
       var winner;
-      winner = this.numberOfMoves() % 2 === 0 ? 'o' : 'x';
+      winner = this.player({
+        whoMovedLast: true
+      });
       return alert("" + winner + " wins!");
     };
 
     BoardCtrl.prototype.parseBoard = function() {
-      var board, pattern, _i, _len, _ref, _results;
-      _ref = this.Settings.WIN_PATTERNS;
-      _results = [];
-      for (_i = 0, _len = _ref.length; _i < _len; _i++) {
-        pattern = _ref[_i];
-        board = this.getBoard(pattern);
-        if (this.checkForWin(board)) {
-          _results.push(this.announceWinner());
-        } else {
-          _results.push(void 0);
-        }
-      }
-      return _results;
+      return this.$scope.patternsToTest = this.$scope.patternsToTest.filter((function(_this) {
+        return function(pattern) {
+          var row;
+          row = _this.getRow(pattern);
+          if (_this.someoneWon(row)) {
+            _this.announceWinner();
+          }
+          return true;
+        };
+      })(this));
     };
 
     BoardCtrl.prototype.mark = function($event) {
