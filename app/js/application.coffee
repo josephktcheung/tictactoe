@@ -22,7 +22,7 @@ class BoardCtrl
     @$scope.gameOn = false
 
   startGame: =>
-    @scope.gameOn = true
+    @$scope.gameOn = true
     @resetBoard()
 
   getPatterns: =>
@@ -39,7 +39,10 @@ class BoardCtrl
     'xxx' == row || 'ooo' == row
 
   resetBoard: =>
+    @$scope.theWinnerIs = false
+    @$scope.cats = false
     @cells = @$scope.cells = {}
+    @$scope.currentPlayer = @player()
     @getPatterns()
 
   numberOfMoves: =>
@@ -61,7 +64,7 @@ class BoardCtrl
     if moves % 2 == 0 then 'x' else 'o'
 
   isMixedRow: (row) ->
-    !!row.match(/ox\d|o\dx|\dox|xo\d|x\do|\dxo/i)
+    !!row.match(/o+\d?x+|x+\d?o+/i)
 
   hasOneX: (row) ->
     !!row.match(/x\d\d|\dx\d|\d\dx/i)
@@ -83,13 +86,11 @@ class BoardCtrl
 
   announceWinner: =>
     winner = @player(whoMovedLast: true)
-    alert "#{winner} wins!"
-    @resetBoard()
+    @$scope.theWinnerIs = winner
     @$scope.gameOn = false
 
   announceTie: =>
-    alert "It's a tie!"
-    @resetBoard()
+    @$scope.cats = true
     @$scope.gameOn = false
 
   rowStillWinnable: (row) =>
@@ -115,8 +116,11 @@ class BoardCtrl
 
   mark: (@$event) =>
     cell = @$event.target.dataset.index
-    @cells[cell] = @player()
-    @parseBoard()
+    if @$scope.gameOn && !@cells[cell]
+      @cells[cell] = @player()
+      @parseBoard()
+      @$scope.currentPlayer = @player()
+
 
 
 BoardCtrl.$inject = ["$scope", "WIN_PATTERNS"]
