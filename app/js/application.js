@@ -2,7 +2,8 @@
 (function() {
   "use strict";
   var BoardCtrl,
-    __bind = function(fn, me){ return function(){ return fn.apply(me, arguments); }; };
+    __bind = function(fn, me){ return function(){ return fn.apply(me, arguments); }; },
+    __indexOf = [].indexOf || function(item) { for (var i = 0, l = this.length; i < l; i++) { if (i in this && this[i] === item) return i; } return -1; };
 
   this.ticTacToe = angular.module('TicTacToe', []);
 
@@ -17,6 +18,7 @@
       this.rowStillWinnable = __bind(this.rowStillWinnable, this);
       this.announceTie = __bind(this.announceTie, this);
       this.announceWinner = __bind(this.announceWinner, this);
+      this.styleWinUnwin = __bind(this.styleWinUnwin, this);
       this.gameUnwinnable = __bind(this.gameUnwinnable, this);
       this.player = __bind(this.player, this);
       this.movesRemaining = __bind(this.movesRemaining, this);
@@ -29,6 +31,7 @@
       this.$scope.mark = this.mark;
       this.$scope.startGame = this.startGame;
       this.$scope.gameOn = false;
+      this.$scope.styleWinUnwin = this.styleWinUnwin;
     }
 
     BoardCtrl.prototype.startGame = function() {
@@ -37,9 +40,7 @@
     };
 
     BoardCtrl.prototype.getPatterns = function() {
-      return this.patternsToTest = this.WIN_PATTERNS.filter(function() {
-        return true;
-      });
+      return this.patternsToTest = this.WIN_PATTERNS.slice(0);
     };
 
     BoardCtrl.prototype.getRow = function(pattern) {
@@ -118,6 +119,40 @@
 
     BoardCtrl.prototype.gameUnwinnable = function() {
       return this.patternsToTest.length < 1;
+    };
+
+    BoardCtrl.prototype.flatten = function(a) {
+      if (a.length === 0) {
+        return [];
+      }
+      return a.reduce(function(lhs, rhs) {
+        return lhs.concat(rhs);
+      });
+    };
+
+    BoardCtrl.prototype.styleWinUnwin = function(cell) {
+      var takenCells, unwinCells, winCells, winRow;
+      winRow = this.patternsToTest.filter((function(_this) {
+        return function(pattern) {
+          var row;
+          row = _this.getRow(pattern);
+          return _this.someoneWon(row);
+        };
+      })(this));
+      if (winRow.length > 0) {
+        takenCells = Object.keys(this.cells).map(function(cell) {
+          return parseInt(cell);
+        });
+        winCells = this.flatten(winRow);
+        unwinCells = takenCells.filter(function(cell) {
+          return !(__indexOf.call(winCells, cell) >= 0);
+        });
+        if (__indexOf.call(winCells, cell) >= 0) {
+          return 'win';
+        } else if (__indexOf.call(unwinCells, cell) >= 0) {
+          return 'unwin';
+        }
+      }
     };
 
     BoardCtrl.prototype.announceWinner = function() {

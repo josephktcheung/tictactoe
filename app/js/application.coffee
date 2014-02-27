@@ -20,13 +20,14 @@ class BoardCtrl
     @$scope.mark = @mark
     @$scope.startGame = @startGame
     @$scope.gameOn = false
+    @$scope.styleWinUnwin = @styleWinUnwin
 
   startGame: =>
     @$scope.gameOn = true
     @resetBoard()
 
   getPatterns: =>
-    @patternsToTest = @WIN_PATTERNS.filter -> true
+    @patternsToTest = @WIN_PATTERNS.slice(0)
 
   getRow: (pattern) =>
     c = @cells
@@ -83,6 +84,21 @@ class BoardCtrl
 
   gameUnwinnable: =>
     @patternsToTest.length < 1
+
+  flatten: (a) ->
+    if a.length is 0 then return []
+    a.reduce (lhs, rhs) -> lhs.concat rhs
+
+  styleWinUnwin: (cell) =>
+    winRow = @patternsToTest.filter (pattern) =>
+      row = @getRow(pattern)
+      @someoneWon(row)
+    if winRow.length > 0
+      takenCells = Object.keys(@cells).map (cell) -> parseInt cell
+      winCells = @flatten(winRow)
+      unwinCells = takenCells.filter (cell) -> not(cell in winCells)
+      if cell in winCells then 'win' 
+      else if cell in unwinCells then 'unwin'
 
   announceWinner: =>
     winner = @player(whoMovedLast: true)
