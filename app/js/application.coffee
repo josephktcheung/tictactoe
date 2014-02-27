@@ -20,7 +20,7 @@ class BoardCtrl
     @$scope.mark = @mark
     @$scope.startGame = @startGame
     @$scope.gameOn = false
-    @$scope.styleWinUnwin = @styleWinUnwin
+    @$scope.styleWinUnwin = ''
 
   startGame: =>
     @$scope.gameOn = true
@@ -43,6 +43,7 @@ class BoardCtrl
     @$scope.theWinnerIs = false
     @$scope.cats = false
     @cells = @$scope.cells = {}
+    @$scope.styleWinUnwin = ''
     @$scope.currentPlayer = @player()
     @getPatterns()
 
@@ -85,25 +86,26 @@ class BoardCtrl
   gameUnwinnable: =>
     @patternsToTest.length < 1
 
-  flatten: (a) ->
-    if a.length is 0 then return []
-    a.reduce (lhs, rhs) -> lhs.concat rhs
-
-  styleWinUnwin: (cell) =>
-    winRow = @patternsToTest.filter (pattern) =>
-      row = @getRow(pattern)
-      @someoneWon(row)
-    if winRow.length > 0
-      takenCells = Object.keys(@cells).map (cell) -> parseInt cell
-      winCells = @flatten(winRow)
-      unwinCells = takenCells.filter (cell) -> not(cell in winCells)
-      if cell in winCells then 'win' 
-      else if cell in unwinCells then 'unwin'
-
   announceWinner: =>
     winner = @player(whoMovedLast: true)
     @$scope.theWinnerIs = winner
     @$scope.gameOn = false
+
+  flatten: (a) ->
+    if a.length is 0 then return []
+    a.reduce (lhs, rhs) -> lhs.concat rhs
+
+  findWinRow: =>
+    @winRow = @patternsToTest.filter (pattern) =>
+      row = @getRow(pattern)
+      @someoneWon(row)
+
+  styleWinUnwin: (cell) =>
+    takenCells = Object.keys(@cells).map (cell) -> parseInt cell
+    winCells = @flatten(@winRow)
+    unwinCells = takenCells.filter (cell) -> not(cell in winCells)
+    if cell in winCells then 'win' 
+    else if cell in unwinCells then 'unwin'
 
   announceTie: =>
     @$scope.cats = true
@@ -126,7 +128,9 @@ class BoardCtrl
       @rowStillWinnable(row)
 
     if won
+      @findWinRow()
       @announceWinner()
+      @$scope.styleWinUnwin = @styleWinUnwin
     else if @gameUnwinnable()
       @announceTie()
 

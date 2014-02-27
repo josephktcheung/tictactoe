@@ -17,8 +17,9 @@
       this.parseBoard = __bind(this.parseBoard, this);
       this.rowStillWinnable = __bind(this.rowStillWinnable, this);
       this.announceTie = __bind(this.announceTie, this);
-      this.announceWinner = __bind(this.announceWinner, this);
       this.styleWinUnwin = __bind(this.styleWinUnwin, this);
+      this.findWinRow = __bind(this.findWinRow, this);
+      this.announceWinner = __bind(this.announceWinner, this);
       this.gameUnwinnable = __bind(this.gameUnwinnable, this);
       this.player = __bind(this.player, this);
       this.movesRemaining = __bind(this.movesRemaining, this);
@@ -31,7 +32,7 @@
       this.$scope.mark = this.mark;
       this.$scope.startGame = this.startGame;
       this.$scope.gameOn = false;
-      this.$scope.styleWinUnwin = this.styleWinUnwin;
+      this.$scope.styleWinUnwin = '';
     }
 
     BoardCtrl.prototype.startGame = function() {
@@ -60,6 +61,7 @@
       this.$scope.theWinnerIs = false;
       this.$scope.cats = false;
       this.cells = this.$scope.cells = {};
+      this.$scope.styleWinUnwin = '';
       this.$scope.currentPlayer = this.player();
       return this.getPatterns();
     };
@@ -121,6 +123,15 @@
       return this.patternsToTest.length < 1;
     };
 
+    BoardCtrl.prototype.announceWinner = function() {
+      var winner;
+      winner = this.player({
+        whoMovedLast: true
+      });
+      this.$scope.theWinnerIs = winner;
+      return this.$scope.gameOn = false;
+    };
+
     BoardCtrl.prototype.flatten = function(a) {
       if (a.length === 0) {
         return [];
@@ -130,38 +141,30 @@
       });
     };
 
-    BoardCtrl.prototype.styleWinUnwin = function(cell) {
-      var takenCells, unwinCells, winCells, winRow;
-      winRow = this.patternsToTest.filter((function(_this) {
+    BoardCtrl.prototype.findWinRow = function() {
+      return this.winRow = this.patternsToTest.filter((function(_this) {
         return function(pattern) {
           var row;
           row = _this.getRow(pattern);
           return _this.someoneWon(row);
         };
       })(this));
-      if (winRow.length > 0) {
-        takenCells = Object.keys(this.cells).map(function(cell) {
-          return parseInt(cell);
-        });
-        winCells = this.flatten(winRow);
-        unwinCells = takenCells.filter(function(cell) {
-          return !(__indexOf.call(winCells, cell) >= 0);
-        });
-        if (__indexOf.call(winCells, cell) >= 0) {
-          return 'win';
-        } else if (__indexOf.call(unwinCells, cell) >= 0) {
-          return 'unwin';
-        }
-      }
     };
 
-    BoardCtrl.prototype.announceWinner = function() {
-      var winner;
-      winner = this.player({
-        whoMovedLast: true
+    BoardCtrl.prototype.styleWinUnwin = function(cell) {
+      var takenCells, unwinCells, winCells;
+      takenCells = Object.keys(this.cells).map(function(cell) {
+        return parseInt(cell);
       });
-      this.$scope.theWinnerIs = winner;
-      return this.$scope.gameOn = false;
+      winCells = this.flatten(this.winRow);
+      unwinCells = takenCells.filter(function(cell) {
+        return !(__indexOf.call(winCells, cell) >= 0);
+      });
+      if (__indexOf.call(winCells, cell) >= 0) {
+        return 'win';
+      } else if (__indexOf.call(unwinCells, cell) >= 0) {
+        return 'unwin';
+      }
     };
 
     BoardCtrl.prototype.announceTie = function() {
@@ -185,7 +188,9 @@
         };
       })(this));
       if (won) {
-        return this.announceWinner();
+        this.findWinRow();
+        this.announceWinner();
+        return this.$scope.styleWinUnwin = this.styleWinUnwin;
       } else if (this.gameUnwinnable()) {
         return this.announceTie();
       }
