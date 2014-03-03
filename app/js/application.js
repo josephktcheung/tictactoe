@@ -17,8 +17,6 @@
       this.parseBoard = __bind(this.parseBoard, this);
       this.rowStillWinnable = __bind(this.rowStillWinnable, this);
       this.announceTie = __bind(this.announceTie, this);
-      this.styleWinUnwin = __bind(this.styleWinUnwin, this);
-      this.findWinRow = __bind(this.findWinRow, this);
       this.announceWinner = __bind(this.announceWinner, this);
       this.gameUnwinnable = __bind(this.gameUnwinnable, this);
       this.player = __bind(this.player, this);
@@ -32,7 +30,6 @@
       this.$scope.mark = this.mark;
       this.$scope.startGame = this.startGame;
       this.$scope.gameOn = false;
-      this.$scope.styleWinUnwin = '';
     }
 
     BoardCtrl.prototype.startGame = function() {
@@ -41,7 +38,9 @@
     };
 
     BoardCtrl.prototype.getPatterns = function() {
-      return this.patternsToTest = this.WIN_PATTERNS.slice(0);
+      return this.patternsToTest = this.WIN_PATTERNS.filter(function() {
+        return true;
+      });
     };
 
     BoardCtrl.prototype.getRow = function(pattern) {
@@ -61,7 +60,7 @@
       this.$scope.theWinnerIs = false;
       this.$scope.cats = false;
       this.cells = this.$scope.cells = {};
-      this.$scope.styleWinUnwin = '';
+      this.winningCells = this.$scope.winningCells = {};
       this.$scope.currentPlayer = this.player();
       return this.getPatterns();
     };
@@ -123,48 +122,16 @@
       return this.patternsToTest.length < 1;
     };
 
-    BoardCtrl.prototype.announceWinner = function() {
-      var winner;
-      winner = this.player({
-        whoMovedLast: true
-      });
+    BoardCtrl.prototype.announceWinner = function(winningPattern) {
+      var k, v, winner, _ref, _ref1;
+      winner = this.cells[winningPattern[0]];
+      _ref = this.cells;
+      for (k in _ref) {
+        v = _ref[k];
+        this.winningCells[k] = (_ref1 = parseInt(k), __indexOf.call(winningPattern, _ref1) >= 0) ? 'win' : 'unwin';
+      }
       this.$scope.theWinnerIs = winner;
       return this.$scope.gameOn = false;
-    };
-
-    BoardCtrl.prototype.flatten = function(a) {
-      if (a.length === 0) {
-        return [];
-      }
-      return a.reduce(function(lhs, rhs) {
-        return lhs.concat(rhs);
-      });
-    };
-
-    BoardCtrl.prototype.findWinRow = function() {
-      return this.winRow = this.patternsToTest.filter((function(_this) {
-        return function(pattern) {
-          var row;
-          row = _this.getRow(pattern);
-          return _this.someoneWon(row);
-        };
-      })(this));
-    };
-
-    BoardCtrl.prototype.styleWinUnwin = function(cell) {
-      var takenCells, unwinCells, winCells;
-      takenCells = Object.keys(this.cells).map(function(cell) {
-        return parseInt(cell);
-      });
-      winCells = this.flatten(this.winRow);
-      unwinCells = takenCells.filter(function(cell) {
-        return !(__indexOf.call(winCells, cell) >= 0);
-      });
-      if (__indexOf.call(winCells, cell) >= 0) {
-        return 'win';
-      } else if (__indexOf.call(unwinCells, cell) >= 0) {
-        return 'unwin';
-      }
     };
 
     BoardCtrl.prototype.announceTie = function() {
@@ -177,20 +144,20 @@
     };
 
     BoardCtrl.prototype.parseBoard = function() {
-      var won;
-      won = false;
+      var winningPattern;
+      winningPattern = false;
       this.patternsToTest = this.patternsToTest.filter((function(_this) {
         return function(pattern) {
           var row;
           row = _this.getRow(pattern);
-          won || (won = _this.someoneWon(row));
+          if (_this.someoneWon(row)) {
+            winningPattern || (winningPattern = pattern);
+          }
           return _this.rowStillWinnable(row);
         };
       })(this));
-      if (won) {
-        this.findWinRow();
-        this.announceWinner();
-        return this.$scope.styleWinUnwin = this.styleWinUnwin;
+      if (winningPattern) {
+        return this.announceWinner(winningPattern);
       } else if (this.gameUnwinnable()) {
         return this.announceTie();
       }
